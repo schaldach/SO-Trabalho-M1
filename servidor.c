@@ -36,7 +36,9 @@
      }
  
      /* now read from the shared memory region */
-     printf("%s",(char *)ptr);
+     printf("%c",(char *)ptr);
+
+
  
      /* remove the shared memory segment */
      if (shm_unlink(name) == -1) {
