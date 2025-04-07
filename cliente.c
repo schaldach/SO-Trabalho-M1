@@ -18,9 +18,9 @@
  int main(){
      const int SIZE = 4096;
      const char *name = "OS";
-     const char *message0= "Studying ";
-     const char *message1= "Operating Systems ";
-     const char *message2= "Is Fun!";
+     const char *message0= "WHERE ";
+     const char *message1= "bla=1 ";
+     const char *message2= "das=2";
  
      int shm_fd;
      void *ptr;
