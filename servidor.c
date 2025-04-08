@@ -112,7 +112,7 @@
                         if(is_on_str){
                             reg.nome[i-str_position] = currentLine[i];
                         }
-                        if(currentLine[i] == ','){
+                        else if(currentLine[i] == ','){
                             is_on_str = true;
                             str_position = i+1;
                         }
