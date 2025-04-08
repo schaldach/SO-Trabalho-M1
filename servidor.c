@@ -32,21 +32,22 @@
 
      // Query* c_ptr = (Query*)ptr;
      char* c_ptr = (char*)ptr;
-     int command = 1;
+     int command = 3;
      int new_id = 2;
-     char* new_string = "novo_nome";
+     char* new_string = "novo_nomedsadsa";
 
      FILE *fptr;
+     FILE *fptr2; 
      char currentLine[70];
+     int id;
 
      switch(command){
-        case 0: ; // Delete
-            FILE *fptr2; // erro bizarro (necessidade desse ; ou colocar essa linha para cima): https://stackoverflow.com/questions/18496282/why-do-i-get-a-label-can-only-be-part-of-a-statement-and-a-declaration-is-not-a
+        case 0: // Delete
             fptr = fopen(dbfile, "r");
             fptr2 = fopen(tempfile, "a");
 
             while(fgets(currentLine, 70, fptr)){
-                int id = atoi(currentLine); // ele vai funcionar automático, pegar o número inteiro até a virgula aparecer, nem precisa pegar a parte certa da string
+                id = atoi(currentLine);
                 if(id != new_id){
                     fprintf(fptr2, "%s", currentLine);
                 }
@@ -65,7 +66,7 @@
             bool id_exists = false;
 
             while(fgets(currentLine, 70, fptr)){
-                int id = atoi(currentLine);
+                id = atoi(currentLine);
                 if(id == new_id){
                     id_exists = true;
                 }
@@ -79,11 +80,10 @@
         
         case 2: // Update
             fptr = fopen(dbfile, "r");
-            // FILE *fptr2; 
             fptr2 = fopen(tempfile, "a");
 
             while(fgets(currentLine, 70, fptr)){
-                int id = atoi(currentLine); // ele vai funcionar automático, pegar o número inteiro até a virgula aparecer, nem precisa pegar a parte certa da string
+                id = atoi(currentLine);
                 if(id != new_id){
                     fprintf(fptr2, "%s", currentLine);
                 }
@@ -100,7 +100,31 @@
         break;
         
         case 3: // Select
-          
+            fptr = fopen(dbfile, "r");
+            Registro reg; // poderia ser um array para permitir uma consulta maior?
+
+            while(fgets(currentLine, 70, fptr)){
+                id = atoi(currentLine);
+                if(id == new_id){ // só buscando pelo id, ainda não tenho certeza como permitir buscar pelo nome também...
+                    reg.id = id;
+
+                    bool is_on_str = false;
+                    int str_position = 0;
+                    for(int i=0;i<70;i++){
+                        if(is_on_str){
+                            reg.nome[i-str_position] = currentLine[i];
+                        }
+                        if(currentLine[i] == ','){
+                            is_on_str = true;
+                            str_position = i+1;
+                        }
+                    }
+                }
+            }
+
+            printf("id:%d - nome:%s", reg.id, reg.nome);
+
+            fclose(fptr);
         break;
 
         default: 
