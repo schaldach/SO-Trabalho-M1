@@ -8,9 +8,6 @@
  #include "banco.h"
 
  int main(){
-     const char *name = "OS";
-     const int SIZE = 4096;
- 
      int shm_fd;
      void *ptr;
 

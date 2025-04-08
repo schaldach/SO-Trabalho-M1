@@ -8,8 +8,6 @@
  #include "banco.h"
  
  int main(){
-     const int SIZE = 4096;
-     const char *name = "OS";
      const char *message0= "dóisahdosad";
      const char *message1= "bla=1";
      const char *message2= "das=2";

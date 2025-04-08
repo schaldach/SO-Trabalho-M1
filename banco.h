@@ -25,4 +25,7 @@ typedef struct {
     // ...
 } Query;
 
+const int SIZE = 4096;
+const char *name = "OS";
+
 #endif
