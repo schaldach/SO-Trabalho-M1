@@ -20,6 +20,7 @@
  
      /* now map the shared memory segment in the address space of the process */
      ptr = mmap(0,SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+     // acho que para permitir escrita pelo servidor ao cliente (SELECT) teríamos que mudar essas permissões, "PROT_READ" e "O_RDONLY"
      if (ptr == MAP_FAILED) {
          printf("Map failed\n");
          exit(-1);
