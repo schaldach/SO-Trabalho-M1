@@ -5,7 +5,6 @@
  *	gcc shm-posix-consumer.c -lrt
  */
 
- #include <stdio.h>
  #include <stdlib.h>
  #include <unistd.h>
  #include <fcntl.h>
@@ -21,7 +20,6 @@
  
      int shm_fd;
      void *ptr;
-     int i;
 
      /* open the shared memory segment */
      shm_fd = shm_open(name, O_RDONLY, 0666);
@@ -39,24 +37,36 @@
  
      /* now read from the shared memory region */
 
+     // query_struct* c_ptr = (query_struct*)ptr;
      char* c_ptr = (char*)ptr;
-     char* command[10] = '';
+     int command = 3;
 
-     i=0;
-     while(c_ptr[i] != ' '){
-        printf("%c\n", c_ptr[i]);
-        command[i] = c_ptr[i];
-        i++;
-     } 
+     FILE *fptr;
+     fptr = fopen("banco.txt", "w");
 
-     printf("%s", command);
+     switch(command){
+        case 0: // Delete
+        // fgets(myString, 100, fptr)
+        break;
+        
+        case 1: // Insert
+         
+        break;
+        
+        case 2: // Update
+         
+        break;
+        
+        case 3: // Select
+          
+        break;
 
-     if(strcmp(command, "CREATE") == 0){
-        printf("O comando é CREATE");
+        default: 
+            printf("Comando inválido");
+        break;
      }
-     if(strcmp(command, "DELETE") == 0){
-        printf("O comando é DELETE");
-     }
+     
+     fclose(fptr);
 
      /* remove the shared memory segment */
      if (shm_unlink(name) == -1) {
