@@ -5,21 +5,13 @@
  * 	gcc shm-posix-producer.c -lrt
  */
 
- #include <stdio.h>
- #include <stdlib.h>
- #include <unistd.h>
- #include <string.h>
- #include <fcntl.h>
- #include <sys/shm.h>
- #include <sys/stat.h>
- #include <sys/mman.h>
- #include <sys/types.h>
+ #include "banco.h"
  
  int main(){
      const int SIZE = 4096;
      const char *name = "OS";
-     const char *message0= "WHERE ";
-     const char *message1= "bla=1 ";
+     const char *message0= "dóisahdosad";
+     const char *message1= "bla=1";
      const char *message2= "das=2";
  
      int shm_fd;

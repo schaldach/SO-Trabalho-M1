@@ -5,14 +5,7 @@
  *	gcc shm-posix-consumer.c -lrt
  */
 
- #include <stdlib.h>
- #include <unistd.h>
- #include <fcntl.h>
- #include <sys/shm.h>
- #include <sys/stat.h>
- #include <sys/mman.h>
- #include <string.h>
- #include <stdio.h>
+ #include "banco.h"
 
  int main(){
      const char *name = "OS";
@@ -37,24 +30,73 @@
  
      /* now read from the shared memory region */
 
-     // query_struct* c_ptr = (query_struct*)ptr;
+     // Query* c_ptr = (Query*)ptr;
      char* c_ptr = (char*)ptr;
-     int command = 3;
+     int command = 1;
+     int new_id = 2;
+     char* new_string = "novo_nome";
 
      FILE *fptr;
-     fptr = fopen("banco.txt", "w");
+     char currentLine[70];
 
      switch(command){
-        case 0: // Delete
-        // fgets(myString, 100, fptr)
+        case 0: ; // Delete
+            FILE *fptr2; // erro bizarro (necessidade desse ; ou colocar essa linha para cima): https://stackoverflow.com/questions/18496282/why-do-i-get-a-label-can-only-be-part-of-a-statement-and-a-declaration-is-not-a
+            fptr = fopen(dbfile, "r");
+            fptr2 = fopen(tempfile, "a");
+
+            while(fgets(currentLine, 70, fptr)){
+                int id = atoi(currentLine); // ele vai funcionar automático, pegar o número inteiro até a virgula aparecer, nem precisa pegar a parte certa da string
+                if(id != new_id){
+                    fprintf(fptr2, "%s", currentLine);
+                }
+            }
+
+            fclose(fptr);
+            fclose(fptr2);
+        
+            remove(dbfile);
+            rename(tempfile, dbfile); 
         break;
         
         case 1: // Insert
-         
+            // checar se id existe
+            fptr = fopen(dbfile, "a+");
+            bool id_exists = false;
+
+            while(fgets(currentLine, 70, fptr)){
+                int id = atoi(currentLine);
+                if(id == new_id){
+                    id_exists = true;
+                }
+            }
+
+            if(!id_exists) fprintf(fptr, "%d,%s", new_id, new_string);
+            else printf("id já existe");
+            
+            fclose(fptr);
         break;
         
         case 2: // Update
-         
+            fptr = fopen(dbfile, "r");
+            // FILE *fptr2; 
+            fptr2 = fopen(tempfile, "a");
+
+            while(fgets(currentLine, 70, fptr)){
+                int id = atoi(currentLine); // ele vai funcionar automático, pegar o número inteiro até a virgula aparecer, nem precisa pegar a parte certa da string
+                if(id != new_id){
+                    fprintf(fptr2, "%s", currentLine);
+                }
+                else{
+                    fprintf(fptr2, "%d,%s", id, new_string);
+                }
+            }
+
+            fclose(fptr);
+            fclose(fptr2);
+    
+            remove(dbfile);
+            rename(tempfile, dbfile); 
         break;
         
         case 3: // Select
@@ -66,8 +108,6 @@
         break;
      }
      
-     fclose(fptr);
-
      /* remove the shared memory segment */
      if (shm_unlink(name) == -1) {
          printf("Error removing %s\n",name);
