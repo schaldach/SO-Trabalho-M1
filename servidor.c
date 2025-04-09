@@ -6,16 +6,143 @@
 */
 
 #include "banco.h"
-#define THREAD_NUM 4
+#define THREAD_NUM 1
 
-typedef struct Task {
-    char* query[100];
-} Task;
 Task taskQueue[256];
 int taskCount = 0;
 
+pthread_mutex_t mutexPrint;
+
+pthread_mutex_t mutexBanco;
+
 pthread_mutex_t mutexQueue;
 pthread_cond_t condQueue;
+
+Query parseQuery(Task* task){
+    Query q = {
+        .reg = {
+            .id = 99,
+            .nome = "harry"
+        },
+        .command = 1
+    };
+
+    return q;
+}
+
+void executeTask(Task* task){
+    Query q = parseQuery(task);
+
+    pthread_mutex_lock(&mutexPrint);
+    printf("ALOOOOO");
+    pthread_mutex_lock(&mutexPrint);
+
+    FILE *fptr;
+    FILE *fptr2; 
+    char currentLine[DB_LINE_SIZE];
+    int id;
+
+    switch(q.command){
+       case 0: // Delete
+           pthread_mutex_lock(&mutexBanco);
+           fptr = fopen(dbfile, "r");
+           fptr2 = fopen(tempfile, "a");
+
+           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+               id = atoi(currentLine);
+               if(id != q.reg.id){
+                   fprintf(fptr2, "%s", currentLine);
+               }
+           }
+
+           fclose(fptr);
+           fclose(fptr2);
+       
+           remove(dbfile);
+           rename(tempfile, dbfile); 
+           pthread_mutex_unlock(&mutexBanco);
+
+       break;
+       
+       case 1: // Insert
+           pthread_mutex_lock(&mutexBanco);
+           fptr = fopen(dbfile, "a+");
+           bool id_exists = false;
+
+           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+               id = atoi(currentLine);
+               if(id == q.reg.id){
+                   id_exists = true;
+               }
+           }
+
+           if(!id_exists) fprintf(fptr, "%d,%s\n", q.reg.id, q.reg.nome);
+           else printf("id já existe");
+           
+           fclose(fptr);
+           pthread_mutex_unlock(&mutexBanco);
+
+       break;
+       
+       case 2: // Update
+           pthread_mutex_lock(&mutexBanco);
+           fptr = fopen(dbfile, "r");
+           fptr2 = fopen(tempfile, "a");
+
+           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+               id = atoi(currentLine);
+               if(id != q.reg.id){
+                   fprintf(fptr2, "%s", currentLine);
+               }
+               else{
+                   fprintf(fptr2, "%d,%s\n", id, q.reg.nome);
+               }
+           }
+
+           fclose(fptr);
+           fclose(fptr2);
+   
+           remove(dbfile);
+           rename(tempfile, dbfile); 
+           pthread_mutex_unlock(&mutexBanco);
+
+       break;
+       
+       case 3: // Select
+           pthread_mutex_lock(&mutexBanco);
+           fptr = fopen(dbfile, "r");
+           Registro reg; // poderia ser um array para permitir uma consulta maior?
+
+           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+               id = atoi(currentLine);
+               if(id == q.reg.id){ // só buscando pelo id, ainda não tenho certeza como permitir buscar pelo nome também...
+                   reg.id = id;
+
+                   bool is_on_str = false;
+                   int str_position = 0;
+                   for(int i=0;i<DB_LINE_SIZE;i++){
+                       if(is_on_str){
+                           reg.nome[i-str_position] = currentLine[i];
+                       }
+                       else if(currentLine[i] == ','){
+                           is_on_str = true;
+                           str_position = i+1;
+                       }
+                   }
+               }
+           }
+
+           printf("id:%d - nome:%s", reg.id, reg.nome);
+           fclose(fptr);
+           pthread_mutex_unlock(&mutexBanco);
+
+       break;
+
+       default: 
+           printf("Comando inválido");
+       break;
+    }
+}
 
 void submitTask(Task task) {
     pthread_mutex_lock(&mutexQueue);
@@ -45,155 +172,44 @@ void* startThread(void* args) {
     }
 }
 
-void executeCommand(Task* task){
-    FILE *fptr;
-    FILE *fptr2; 
-    char currentLine[70];
-    int id;
-
-    switch(command){
-       case 0: // Delete
-           fptr = fopen(dbfile, "r");
-           fptr2 = fopen(tempfile, "a");
-
-           while(fgets(currentLine, 70, fptr)){
-               id = atoi(currentLine);
-               if(id != new_id){
-                   fprintf(fptr2, "%s", currentLine);
-               }
-           }
-
-           fclose(fptr);
-           fclose(fptr2);
-       
-           remove(dbfile);
-           rename(tempfile, dbfile); 
-       break;
-       
-       case 1: // Insert
-           // checar se id existe
-           fptr = fopen(dbfile, "a+");
-           bool id_exists = false;
-
-           while(fgets(currentLine, 70, fptr)){
-               id = atoi(currentLine);
-               if(id == new_id){
-                   id_exists = true;
-               }
-           }
-
-           if(!id_exists) fprintf(fptr, "%d,%s", new_id, new_string);
-           else printf("id já existe");
-           
-           fclose(fptr);
-       break;
-       
-       case 2: // Update
-           fptr = fopen(dbfile, "r");
-           fptr2 = fopen(tempfile, "a");
-
-           while(fgets(currentLine, 70, fptr)){
-               id = atoi(currentLine);
-               if(id != new_id){
-                   fprintf(fptr2, "%s", currentLine);
-               }
-               else{
-                   fprintf(fptr2, "%d,%s", id, new_string);
-               }
-           }
-
-           fclose(fptr);
-           fclose(fptr2);
-   
-           remove(dbfile);
-           rename(tempfile, dbfile); 
-       break;
-       
-       case 3: // Select
-           fptr = fopen(dbfile, "r");
-           Registro reg; // poderia ser um array para permitir uma consulta maior?
-
-           while(fgets(currentLine, 70, fptr)){
-               id = atoi(currentLine);
-               if(id == new_id){ // só buscando pelo id, ainda não tenho certeza como permitir buscar pelo nome também...
-                   reg.id = id;
-
-                   bool is_on_str = false;
-                   int str_position = 0;
-                   for(int i=0;i<70;i++){
-                       if(is_on_str){
-                           reg.nome[i-str_position] = currentLine[i];
-                       }
-                       else if(currentLine[i] == ','){
-                           is_on_str = true;
-                           str_position = i+1;
-                       }
-                   }
-               }
-           }
-
-           printf("id:%d - nome:%s", reg.id, reg.nome);
-
-           fclose(fptr);
-       break;
-
-       default: 
-           printf("Comando inválido");
-       break;
-    }
-}
-
 int main(){
-     int shm_fd;
-     void *ptr;
-
-     shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
-     ftruncate(shm_fd,SIZE);
-     if (shm_fd == -1) {
-        printf("shared memory failed\n");
-        exit(-1);
-     }
-     ptr = mmap(0,SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-     if (ptr == MAP_FAILED) {
-         printf("Map failed\n");
-         exit(-1);
-     }
+    int fd;
+    mkfifo(myfifo, 0666);
  
-     pthread_t th[THREAD_NUM];
-     pthread_mutex_init(&mutexQueue, NULL);
-     pthread_cond_init(&condQueue, NULL);
-     int i;
-     for (i = 0; i < THREAD_NUM; i++) {
-         if (pthread_create(&th[i], NULL, &startThread, NULL) != 0) {
-             perror("Failed to create the thread");
-         }
-     } 
+    pthread_t th[THREAD_NUM];
+    pthread_mutex_init(&mutexQueue, NULL);
+    pthread_mutex_init(&mutexBanco, NULL);
+    pthread_cond_init(&condQueue, NULL);
 
-     /* now read from the shared memory region */
-     while(1){
-        char* c_ptr = (char*)ptr;
-        printf("%s", c_ptr);
-     }
+    int i;
+    for (i = 0; i < THREAD_NUM; i++) {
+        if (pthread_create(&th[i], NULL, &startThread, NULL) != 0) {
+            perror("Failed to create the thread");
+        }
+    } 
 
-     // Query* c_ptr = (Query*)ptr;
-     char* c_ptr = (char*)ptr;
-     int command = 3;
-     int new_id = 2;
-     char* new_string = "novo_nomedsadsa";
-     
-     /* remove the shared memory segment */
-     if (shm_unlink(name) == -1) {
-         printf("Error removing %s\n",name);
-         exit(-1);
-     }
- 
-     for (i = 0; i < THREAD_NUM; i++) {
+    char query[QUERY_SIZE];
+    while(1){
+        fd = open(myfifo, O_RDONLY);
+		read(fd, query, QUERY_SIZE);
+        printf("%s", query);
+
+        Task t = {
+            .query = query
+        };
+        submitTask(t);
+
+		close(fd);
+    }
+      
+    for (i = 0; i < THREAD_NUM; i++) {
         if (pthread_join(th[i], NULL) != 0) {
             perror("Failed to join the thread");
         }
     }
+    
     pthread_mutex_destroy(&mutexQueue);
     pthread_cond_destroy(&condQueue);
 
-     return 0;
+    return 0;
  }

@@ -13,8 +13,12 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#define QUERY_SIZE 100
+#define DB_LINE_SIZE 70
+
 char* dbfile = "banco.txt";
 char* tempfile = "bancotemp.txt";
+char * myfifo = "/tmp/myfifo";
 
 typedef struct {
     int id;
@@ -23,10 +27,11 @@ typedef struct {
 
 typedef struct {
     Registro reg;
-    // ...
+    int command;
 } Query;
 
-const int SIZE = 4096;
-const char *name = "OS";
+typedef struct Task {
+    char* query[QUERY_SIZE];
+} Task;
 
 #endif
