@@ -187,5 +187,13 @@ int main(){
          exit(-1);
      }
  
+     for (i = 0; i < THREAD_NUM; i++) {
+        if (pthread_join(th[i], NULL) != 0) {
+            perror("Failed to join the thread");
+        }
+    }
+    pthread_mutex_destroy(&mutexQueue);
+    pthread_cond_destroy(&condQueue);
+
      return 0;
  }
