@@ -6,36 +6,30 @@
 */
 
 #include "banco.h"
-#define THREAD_NUM 1
+#define THREAD_NUM 4
 
 Task taskQueue[256];
 int taskCount = 0;
-
-pthread_mutex_t mutexPrint;
 
 pthread_mutex_t mutexBanco;
 
 pthread_mutex_t mutexQueue;
 pthread_cond_t condQueue;
 
-Query parseQuery(Task* task){
+Query parseQuery(char* query){
     Query q = {
         .reg = {
-            .id = 99,
+            .id = atoi(query),
             .nome = "harry"
         },
-        .command = 1
+        .command = 0
     };
 
     return q;
 }
 
 void executeTask(Task* task){
-    Query q = parseQuery(task);
-
-    pthread_mutex_lock(&mutexPrint);
-    printf("ALOOOOO");
-    pthread_mutex_lock(&mutexPrint);
+    Query q = parseQuery(task->query);
 
     FILE *fptr;
     FILE *fptr2; 
@@ -77,7 +71,7 @@ void executeTask(Task* task){
            }
 
            if(!id_exists) fprintf(fptr, "%d,%s\n", q.reg.id, q.reg.nome);
-           else printf("id já existe");
+           else printf("id já existe\n");
            
            fclose(fptr);
            pthread_mutex_unlock(&mutexBanco);
@@ -132,14 +126,14 @@ void executeTask(Task* task){
                }
            }
 
-           printf("id:%d - nome:%s", reg.id, reg.nome);
+           printf("id:%d - nome:%s\n", reg.id, reg.nome);
            fclose(fptr);
            pthread_mutex_unlock(&mutexBanco);
 
        break;
 
        default: 
-           printf("Comando inválido");
+           printf("Comando inválido\n");
        break;
     }
 }
@@ -181,6 +175,11 @@ int main(){
     pthread_mutex_init(&mutexBanco, NULL);
     pthread_cond_init(&condQueue, NULL);
 
+    // um comportamento muito bizarro é que as vezes parece que o comando chega mais de uma vez
+    // mas não da pra perceber isso de outra forma senão olhando pro log,
+    // porque realmente nao interfere em nada
+    // muito esquisto, mas ok
+
     int i;
     for (i = 0; i < THREAD_NUM; i++) {
         if (pthread_create(&th[i], NULL, &startThread, NULL) != 0) {
@@ -188,15 +187,14 @@ int main(){
         }
     } 
 
-    char query[QUERY_SIZE];
     while(1){
         fd = open(myfifo, O_RDONLY);
-		read(fd, query, QUERY_SIZE);
-        printf("%s", query);
 
-        Task t = {
-            .query = query
-        };
+        Task t;
+		read(fd, t.query, QUERY_SIZE);
+        printf("%s\n", t.query);
+        // esse \n é absolutamente necessário senão o print não aparece, quebrei muito a cabeça pra descobrir
+
         submitTask(t);
 
 		close(fd);

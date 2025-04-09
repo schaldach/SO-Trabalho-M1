@@ -8,12 +8,15 @@
  #include "banco.h"
  
  int main(){
-    int fd;
+    int fd1;
     mkfifo(myfifo, 0666);
-    char* test_string = "SELECT tanana WHERE tanana";
-    fd = open(myfifo, O_WRONLY);
-    write(fd, test_string, QUERY_SIZE+1);
-    close(fd);
+    
+    char test_string[QUERY_SIZE];
+    scanf("%s", test_string);
+
+    fd1 = open(myfifo, O_WRONLY);
+    write(fd1, test_string, QUERY_SIZE+1);
+    close(fd1);
 
     return 0;
  }

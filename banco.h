@@ -18,7 +18,7 @@
 
 char* dbfile = "banco.txt";
 char* tempfile = "bancotemp.txt";
-char * myfifo = "/tmp/myfifo";
+char* myfifo = "/tmp/myfifo";
 
 typedef struct {
     int id;
@@ -31,7 +31,7 @@ typedef struct {
 } Query;
 
 typedef struct Task {
-    char* query[QUERY_SIZE];
+    char query[QUERY_SIZE];
 } Task;
 
 #endif
