@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 char* dbfile = "banco.txt";
 char* tempfile = "bancotemp.txt";
