@@ -15,7 +15,8 @@
     scanf("%s", test_string);
 
     fd1 = open(myfifo, O_WRONLY);
-    write(fd1, test_string, QUERY_SIZE+1);
+    write(fd1, test_string, strlen(test_string)+1);
+    // testando com QUERY_SIZE o bug parece que ocorreu mais vezes, mas usando ambos ocorreu.
     close(fd1);
 
     return 0;
