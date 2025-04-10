@@ -22,7 +22,7 @@ Query parseQuery(char* query){
             .id = atoi(query),
             .nome = "harry"
         },
-        .command = 0
+        .command = 1
     };
 
     return q;
@@ -30,6 +30,9 @@ Query parseQuery(char* query){
 
 void executeTask(Task* task){
     Query q = parseQuery(task->query);
+
+    int thread_id = rand()%100000;
+    printf("Começando thread %d\n", thread_id);
 
     FILE *fptr;
     FILE *fptr2; 
@@ -136,6 +139,9 @@ void executeTask(Task* task){
            printf("Comando inválido\n");
        break;
     }
+
+    while(1){}
+    printf("Terminando thread %d\n", thread_id);
 }
 
 void submitTask(Task task) {
