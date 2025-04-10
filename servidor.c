@@ -140,7 +140,6 @@ void executeTask(Task* task){
        break;
     }
 
-    while(1){}
     printf("Terminando thread %d\n", thread_id);
 }
 
