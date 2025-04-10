@@ -12,7 +12,8 @@
     mkfifo(myfifo, 0666);
     
     char test_string[QUERY_SIZE];
-    scanf("%s", test_string);
+    scanf("%[^\n]%*c", test_string);
+    printf("%s", test_string);
 
     fd1 = open(myfifo, O_WRONLY);
     write(fd1, test_string, strlen(test_string)+1);

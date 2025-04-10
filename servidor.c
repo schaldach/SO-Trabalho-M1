@@ -13,18 +13,30 @@ int taskCount = 0;
 
 pthread_mutex_t mutexBanco;
 
-pthread_mutex_t mutexPipe;
-
 pthread_mutex_t mutexQueue;
 pthread_cond_t condQueue;
 
 Query parseQuery(char* query){
+    int command = -1;
+    char queryCommand[6];
+    for(int y=0;y<6;y++) queryCommand[y] = query[y];
+    printf("%s\n", queryCommand);
+
+    if(strcmp(queryCommand, "DELETE") == 0) command = 0;
+    if(strcmp(queryCommand, "INSERT") == 0) command = 1;
+    if(strcmp(queryCommand, "UPDATE") == 0) command = 2;
+    if(strcmp(queryCommand, "SELECT") == 0) command = 3;
+
+    char id_string[12];
+    for(int y=10;y<22;y++) id_string[y] = query[y];
+    int id = atoi(id_string); // se tiver espaços ele pega o número certinho
+
     Query q = {
         .reg = {
-            .id = atoi(query),
+            .id = id,
             .nome = "harry"
         },
-        .command = 1
+        .command = command
     };
 
     return q;
@@ -180,7 +192,6 @@ int main(){
     pthread_t th[THREAD_NUM];
     pthread_mutex_init(&mutexQueue, NULL);
     pthread_mutex_init(&mutexBanco, NULL);
-    pthread_mutex_init(&mutexPipe, NULL);
 
     pthread_cond_init(&condQueue, NULL);
 
@@ -201,9 +212,7 @@ int main(){
 
         Task t;
 
-        pthread_mutex_lock(&mutexPipe);
 		read(fd, t.query, QUERY_SIZE);
-        pthread_mutex_unlock(&mutexPipe);
 
         printf("%s\n", t.query);
         // esse \n é absolutamente necessário senão o print não aparece, quebrei muito a cabeça pra descobrir
