@@ -13,6 +13,8 @@ int taskCount = 0;
 
 pthread_mutex_t mutexBanco;
 
+pthread_mutex_t mutexPipe;
+
 pthread_mutex_t mutexQueue;
 pthread_cond_t condQueue;
 
@@ -178,6 +180,8 @@ int main(){
     pthread_t th[THREAD_NUM];
     pthread_mutex_init(&mutexQueue, NULL);
     pthread_mutex_init(&mutexBanco, NULL);
+    pthread_mutex_init(&mutexPipe, NULL);
+
     pthread_cond_init(&condQueue, NULL);
 
     // um comportamento muito bizarro é que as vezes parece que o comando chega mais de uma vez
@@ -196,7 +200,11 @@ int main(){
         fd = open(myfifo, O_RDONLY);
 
         Task t;
+
+        pthread_mutex_lock(&mutexPipe);
 		read(fd, t.query, QUERY_SIZE);
+        pthread_mutex_unlock(&mutexPipe);
+
         printf("%s\n", t.query);
         // esse \n é absolutamente necessário senão o print não aparece, quebrei muito a cabeça pra descobrir
 
