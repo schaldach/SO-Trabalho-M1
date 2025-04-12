@@ -18,8 +18,9 @@ pthread_cond_t condQueue;
 
 Query parseQuery(char* query){
     int command = -1;
-    char queryCommand[6];
+    char queryCommand[7];
     for(int y=0;y<6;y++) queryCommand[y] = query[y];
+    queryCommand[6] = '\0'; // senão vem caracteres estranhos no final, as vezes
     printf("%s\n", queryCommand);
 
     if(strcmp(queryCommand, "DELETE") == 0) command = 0;
@@ -27,17 +28,32 @@ Query parseQuery(char* query){
     if(strcmp(queryCommand, "UPDATE") == 0) command = 2;
     if(strcmp(queryCommand, "SELECT") == 0) command = 3;
 
-    char id_string[12];
-    for(int y=10;y<22;y++) id_string[y] = query[y];
-    int id = atoi(id_string); // se tiver espaços ele pega o número certinho
+    int id;
+    char * idFound = strstr(query, "id=");
+    if (idFound != NULL) {
+        int idPosition = idFound - query + 3; // seguindo https://stackoverflow.com/questions/4824/string-indexof-function-in-c
+        char idString[12];
+        for(int y=0; y<12; y++){
+            if(query[y+idPosition] == ' ' || query[y+idPosition] == '\0') break;
+            idString[y] = query[y+idPosition];
+        }
+        id = atoi(idString); // se tiver espaços ele pega o número certinho
+    }
 
-    Query q = {
-        .reg = {
-            .id = id,
-            .nome = "harry"
-        },
-        .command = command
-    };
+    char nameString[50];
+    char * nameFound = strstr(query, "nome=");
+    if (nameFound != NULL) {
+        int namePosition = nameFound - query + 5; 
+        for(int y=0; y<50; y++){
+            if(query[y+namePosition] == ' ' || query[y+namePosition] == '\0') break;
+            nameString[y] = query[y+namePosition];
+        }    
+    }
+
+    Query q; 
+    q.reg.id = id;
+    strcpy(q.reg.nome, nameString);
+    q.command = command;
 
     return q;
 }
