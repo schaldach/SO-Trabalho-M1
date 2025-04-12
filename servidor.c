@@ -17,6 +17,10 @@ pthread_mutex_t mutexQueue;
 pthread_cond_t condQueue;
 
 Query parseQuery(char* query){
+    // (documentação no cliente)
+    // o \n é inserido pelo banco nos comandos
+    query[strcspn(query, "\n")] = 0;
+
     int command = -1;
     char queryCommand[7];
     for(int y=0;y<6;y++) queryCommand[y] = query[y];
@@ -45,10 +49,14 @@ Query parseQuery(char* query){
     if (nameFound != NULL) {
         int namePosition = nameFound - query + 5; 
         for(int y=0; y<50; y++){
-            if(query[y+namePosition] == ' ' || query[y+namePosition] == '\0') break;
+            if(query[y+namePosition] == ' ' || query[y+namePosition] == '\0'){
+                nameString[y] = '\0';
+                break;
+            }
             nameString[y] = query[y+namePosition];
         }    
     }
+    nameString[49] = '\0';
 
     Query q; 
     q.reg.id = id;
