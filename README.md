@@ -1,7 +1,18 @@
 # SO-trabalho-M1
 
-para executar, primeiro executamos o "servidorbin" que é a versão compilada do servidor.c, e depois para cada requisição o "clientebin" que é a versão compilada do cliente.c
+passo-a-passo pra executar:
+1° rodando o servidor
+"gcc -o servidorbin servidor.c -lrt -lpthread"
+"./servidorbin"
 
-para compilar, basta usar o comando "gcc -o {qualquer nome}bin {arquivo}.c -lrt -lpthread"
+2° rodando o cliente (em um terminal separado)
+"gcc -o clientebin cliente.c -lrt -lpthread
+"./clientebin" (por favor usar bin como sufixo pra não ser comitado)
 
-por favor usar bin como terminação para não ser comitado
+dai ele vai esperar para você digitar o comando (por enquanto, iremos mudar depois)
+os 4 tipos de comandos são:
+
+"INSERT id=9 nome=gabriel"
+"UPDATE id=9 nome=jonas"
+"SELECT id=9"
+"DELETE id=9"
