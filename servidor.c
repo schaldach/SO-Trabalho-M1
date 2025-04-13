@@ -199,8 +199,13 @@ void executeTask(Task* task){
     pthread_mutex_lock(&mutexLog); 
     fptr = fopen(logfile, "a"); //Insere o ocorrido no log
 
-    fprintf(fptr, "%s ao executar operação %s em id=%d, nome=%s\n", status, q.commandString, q.reg.id, q.reg.nome);
-    if(q.command == 3) fprintf(fptr, "SELECT: id=%d, nome=%s\n", q.reg.id, q.reg.nome);
+    if(q.command == -1){
+        fprintf(fptr, "Erro ao executar, comando inválido\n");
+    }
+    else{
+        fprintf(fptr, "%s ao executar operação %s em id=%d, nome=%s\n", status, q.commandString, q.reg.id, q.reg.nome);
+        if(q.command == 3) fprintf(fptr, "SELECT: id=%d, nome=%s\n", q.reg.id, q.reg.nome);    
+    }
 
     fclose(fptr);
     pthread_mutex_unlock(&mutexLog);
