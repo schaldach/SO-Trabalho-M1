@@ -6,35 +6,39 @@
 */
 
 #include "banco.h"
-#define THREAD_NUM 4
+#define THREAD_NUM 4    //Este é o número de threads que iremos consumir
 
-Task taskQueue[256];
+Task taskQueue[256]; //Fila de tarefas - com no máximo 256 comandos
 int taskCount = 0;
 
-pthread_mutex_t mutexBanco;
+pthread_mutex_t mutexBanco; // Usado para proteger o acesso ao banco
 
 pthread_mutex_t mutexLog;
 
-pthread_mutex_t mutexQueue;
-pthread_cond_t condQueue;
+pthread_mutex_t mutexQueue; //protege a fila lá
+pthread_cond_t condQueue;  // sinalizar que tem tarefas disponíveis
 
 Query parseQuery(char* query){
     // (documentação no cliente)
     // o \n é inserido pelo banco nos comandos
     query[strcspn(query, "\n")] = 0;
 
-    int command = -1;
+    int command = -1;  //váriável para identificar o comando a ser usado
+    
+    // pega os 6 primeiros caracteres da frase enviada
     char queryCommand[7];
     for(int y=0;y<6;y++) queryCommand[y] = query[y];
     queryCommand[6] = '\0'; // senão vem caracteres estranhos no final, as vezes
     // printf("%s\n", queryCommand);
 
+    //verifica o tipo de comando
     if(strcmp(queryCommand, "DELETE") == 0) command = 0;
     if(strcmp(queryCommand, "INSERT") == 0) command = 1;
     if(strcmp(queryCommand, "UPDATE") == 0) command = 2;
     if(strcmp(queryCommand, "SELECT") == 0) command = 3;
 
     int id;
+    //Procura o id na string e extrai o valor numérico
     char * idFound = strstr(query, "id=");
     if (idFound != NULL) {
         int idPosition = idFound - query + 3; // seguindo https://stackoverflow.com/questions/4824/string-indexof-function-in-c
@@ -47,6 +51,7 @@ Query parseQuery(char* query){
     }
 
     char nameString[50] = "\0";
+    //O mesmo processo só que para o nome
     char * nameFound = strstr(query, "nome=");
     if (nameFound != NULL) {
         int namePosition = nameFound - query + 5; 
@@ -70,8 +75,9 @@ Query parseQuery(char* query){
 }
 
 void executeTask(Task* task){
-    Query q = parseQuery(task->query);
+    Query q = parseQuery(task->query); //Faz a interpretação da task
 
+    //para verificar no log
     int thread_id = rand()%100000;
     printf("Começando thread %d\n", thread_id);
 
@@ -83,90 +89,97 @@ void executeTask(Task* task){
 
     switch(q.command){
        case 0: // Delete
-           pthread_mutex_lock(&mutexBanco);
-           fptr = fopen(dbfile, "r");
-           fptr2 = fopen(tempfile, "a");
+        //Lê as informações do banco e copia
+            pthread_mutex_lock(&mutexBanco);
+            fptr = fopen(dbfile, "r");
+            fptr2 = fopen(tempfile, "a");
 
-           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
-               id = atoi(currentLine);
-               if(id != q.reg.id){
-                   fprintf(fptr2, "%s", currentLine);
-               }
-               else{
-                querySuccess = true;
-               }
-           }
+            //copia todas as linhas exceto o id a seer deletado
+            while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+                id = atoi(currentLine);
+                if(id != q.reg.id){
+                    fprintf(fptr2, "%s", currentLine);
+                }
+                else{
+                    querySuccess = true;
+                }
+            }
 
-           fclose(fptr);
-           fclose(fptr2);
-       
-           remove(dbfile);
-           rename(tempfile, dbfile); 
-           pthread_mutex_unlock(&mutexBanco);
+            fclose(fptr);
+            fclose(fptr2);
+            
+            //substitui o antigo arquivo pelo novo
+            remove(dbfile);
+            rename(tempfile, dbfile); 
+            pthread_mutex_unlock(&mutexBanco);
 
        break;
        
        case 1: // Insert
-           pthread_mutex_lock(&mutexBanco);
-           fptr = fopen(dbfile, "a+");
-           querySuccess = true;
+            pthread_mutex_lock(&mutexBanco);
+            fptr = fopen(dbfile, "a+");
+            querySuccess = true;
+            
+            //Verifica se o ID já existe
+            while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+                id = atoi(currentLine);
+                if(id == q.reg.id){
+                        querySuccess = false;
+                }
+            }
 
-           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
-               id = atoi(currentLine);
-               if(id == q.reg.id){
-                    querySuccess = false;
-               }
-           }
-
-           if(querySuccess) fprintf(fptr, "%d%c%s\n", q.reg.id, dbDelimiter, q.reg.nome);
-           
-           fclose(fptr);
-           pthread_mutex_unlock(&mutexBanco);
+            //Se não existir, insere o que foi pedido no final do banco
+            if(querySuccess) fprintf(fptr, "%d%c%s\n", q.reg.id, dbDelimiter, q.reg.nome);
+            
+            fclose(fptr);
+            pthread_mutex_unlock(&mutexBanco);
 
        break;
        
        case 2: // Update
-           pthread_mutex_lock(&mutexBanco);
-           fptr = fopen(dbfile, "r");
-           fptr2 = fopen(tempfile, "a");
+            pthread_mutex_lock(&mutexBanco);
+            fptr = fopen(dbfile, "r");
+            fptr2 = fopen(tempfile, "a");
+            
+            //Percorre por tudo e reescreve, atualizando apenas o registro com id informado
+            while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+                id = atoi(currentLine);
+                if(id != q.reg.id){
+                    fprintf(fptr2, "%s", currentLine);
+                }
+                else{
+                    fprintf(fptr2, "%d%c%s\n", id, dbDelimiter, q.reg.nome);
+                    querySuccess = true;
+                }
+            }
 
-           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
-               id = atoi(currentLine);
-               if(id != q.reg.id){
-                   fprintf(fptr2, "%s", currentLine);
-               }
-               else{
-                   fprintf(fptr2, "%d%c%s\n", id, dbDelimiter, q.reg.nome);
-                   querySuccess = true;
-               }
-           }
-
-           fclose(fptr);
-           fclose(fptr2);
-   
-           remove(dbfile);
-           rename(tempfile, dbfile); 
-           pthread_mutex_unlock(&mutexBanco);
+            fclose(fptr);
+            fclose(fptr2);
+    
+            remove(dbfile);
+            rename(tempfile, dbfile); 
+            pthread_mutex_unlock(&mutexBanco);
 
        break;
        
        case 3: // Select
-           pthread_mutex_lock(&mutexBanco);
-           fptr = fopen(dbfile, "r");
-           // poderia ser um array de registros para permitir uma consulta maior?
+            pthread_mutex_lock(&mutexBanco);
+            fptr = fopen(dbfile, "r");
+            // poderia ser um array de registros para permitir uma consulta maior?
+           
+            //procura o id e imprime o nome
+            while(fgets(currentLine, DB_LINE_SIZE, fptr)){
+                id = atoi(currentLine);
+                if(id == q.reg.id){ // só buscando pelo id, ainda não tenho certeza como permitir buscar pelo nome também...
+                    // pega a primeira ocorrência do delimitar, incrementa por 1 para pegar apenas o nome
+                    strcpy(q.reg.nome, strchr(currentLine, dbDelimiter)+1);
+                        querySuccess = true;
+                    }
+            }
 
-           while(fgets(currentLine, DB_LINE_SIZE, fptr)){
-               id = atoi(currentLine);
-               if(id == q.reg.id){ // só buscando pelo id, ainda não tenho certeza como permitir buscar pelo nome também...
-                   // pega a primeira ocorrência do delimitar, incrementa por 1 para pegar apenas o nome
-                   strcpy(q.reg.nome, strchr(currentLine, dbDelimiter)+1);
-                    querySuccess = true;
-                }
-           }
-
-           printf("id:%d - nome:%s\n", q.reg.id, q.reg.nome);
-           fclose(fptr);
-           pthread_mutex_unlock(&mutexBanco);
+            printf("id:%d - nome:%s\n", q.reg.id, q.reg.nome);
+            fclose(fptr);
+            pthread_mutex_unlock(&mutexBanco);
 
        break;
 
@@ -183,8 +196,8 @@ void executeTask(Task* task){
     // para evitar de, quando o nome vem do SELECT (nos outros casos ela já é tratada na função parseQuery), 
     // o caractere '\n' vir junto e deixar o arquivo de log desorganizado
 
-    pthread_mutex_lock(&mutexLog);
-    fptr = fopen(logfile, "a");
+    pthread_mutex_lock(&mutexLog); 
+    fptr = fopen(logfile, "a"); //Insere o ocorrido no log
 
     fprintf(fptr, "%s ao executar operação %s em id=%d, nome=%s\n", status, q.commandString, q.reg.id, q.reg.nome);
     if(q.command == 3) fprintf(fptr, "SELECT: id=%d, nome=%s\n", q.reg.id, q.reg.nome);
@@ -197,29 +210,32 @@ void executeTask(Task* task){
 
 void submitTask(Task task) {
     pthread_mutex_lock(&mutexQueue);
-    taskQueue[taskCount] = task;
-    taskCount++;
+    taskQueue[taskCount] = task; //adiona a nova task a fila
+    taskCount++;  //adiciona mais uma task ao contador
     pthread_mutex_unlock(&mutexQueue);
     pthread_cond_signal(&condQueue);
 }
 
+//Função relacionada ao que a thread irá fazer
 void* startThread(void* args) {
     while (1) {
         Task task;
 
         pthread_mutex_lock(&mutexQueue);
+        //Esse loop vai fazer com que a thread fique esperando até a próxima task for adicionada
         while (taskCount == 0) {
             pthread_cond_wait(&condQueue, &mutexQueue);
         }
-
-        task = taskQueue[0];
+        
+        //Quando for notado que possui uma nova tesk:
+        task = taskQueue[0]; //Pega as informações da task
         int i;
         for (i = 0; i < taskCount - 1; i++) {
-            taskQueue[i] = taskQueue[i + 1];
+            taskQueue[i] = taskQueue[i + 1]; //Retira a task da fila
         }
-        taskCount--;
+        taskCount--; //Diminui do contador a task retirada
         pthread_mutex_unlock(&mutexQueue);
-        executeTask(&task);
+        executeTask(&task); //Executa com as informações da task retirada
     }
 }
 
@@ -238,6 +254,7 @@ int main(){
     // porque realmente nao interfere em nada
     // muito esquisto, mas ok
 
+    //Cria as threads
     int i;
     for (i = 0; i < THREAD_NUM; i++) {
         if (pthread_create(&th[i], NULL, &startThread, NULL) != 0) {
@@ -246,17 +263,21 @@ int main(){
     } 
 
     while(1){
+        //Abre a FIFO enviada pelo cliente
         fd = open(myfifo, O_RDONLY);
 
         Task t;
 
+        // faz a leitura das informações da FIFO da variável fd
 		read(fd, t.query, QUERY_SIZE);
 
         printf("%s\n", t.query);
         // esse \n é absolutamente necessário senão o print não aparece, quebrei muito a cabeça pra descobrir
 
+        //Adicionar uma task a fila
         submitTask(t);
 
+        //sinaliza que é o fim da escrita da FIFO
 		close(fd);
     }
       
