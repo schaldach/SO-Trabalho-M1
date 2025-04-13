@@ -13,6 +13,8 @@ int taskCount = 0;
 
 pthread_mutex_t mutexBanco;
 
+pthread_mutex_t mutexLog;
+
 pthread_mutex_t mutexQueue;
 pthread_cond_t condQueue;
 
@@ -25,7 +27,7 @@ Query parseQuery(char* query){
     char queryCommand[7];
     for(int y=0;y<6;y++) queryCommand[y] = query[y];
     queryCommand[6] = '\0'; // senão vem caracteres estranhos no final, as vezes
-    printf("%s\n", queryCommand);
+    // printf("%s\n", queryCommand);
 
     if(strcmp(queryCommand, "DELETE") == 0) command = 0;
     if(strcmp(queryCommand, "INSERT") == 0) command = 1;
@@ -44,7 +46,7 @@ Query parseQuery(char* query){
         id = atoi(idString); // se tiver espaços ele pega o número certinho
     }
 
-    char nameString[50];
+    char nameString[50] = "\0";
     char * nameFound = strstr(query, "nome=");
     if (nameFound != NULL) {
         int namePosition = nameFound - query + 5; 
@@ -61,6 +63,7 @@ Query parseQuery(char* query){
     Query q; 
     q.reg.id = id;
     strcpy(q.reg.nome, nameString);
+    strcpy(q.commandString, queryCommand);
     q.command = command;
 
     return q;
@@ -76,6 +79,7 @@ void executeTask(Task* task){
     FILE *fptr2; 
     char currentLine[DB_LINE_SIZE];
     int id;
+    bool querySuccess = false;
 
     switch(q.command){
        case 0: // Delete
@@ -87,6 +91,9 @@ void executeTask(Task* task){
                id = atoi(currentLine);
                if(id != q.reg.id){
                    fprintf(fptr2, "%s", currentLine);
+               }
+               else{
+                querySuccess = true;
                }
            }
 
@@ -102,17 +109,16 @@ void executeTask(Task* task){
        case 1: // Insert
            pthread_mutex_lock(&mutexBanco);
            fptr = fopen(dbfile, "a+");
-           bool id_exists = false;
+           querySuccess = true;
 
            while(fgets(currentLine, DB_LINE_SIZE, fptr)){
                id = atoi(currentLine);
                if(id == q.reg.id){
-                   id_exists = true;
+                    querySuccess = false;
                }
            }
 
-           if(!id_exists) fprintf(fptr, "%d,%s\n", q.reg.id, q.reg.nome);
-           else printf("id já existe\n");
+           if(querySuccess) fprintf(fptr, "%d%c%s\n", q.reg.id, dbDelimiter, q.reg.nome);
            
            fclose(fptr);
            pthread_mutex_unlock(&mutexBanco);
@@ -130,7 +136,8 @@ void executeTask(Task* task){
                    fprintf(fptr2, "%s", currentLine);
                }
                else{
-                   fprintf(fptr2, "%d,%s\n", id, q.reg.nome);
+                   fprintf(fptr2, "%d%c%s\n", id, dbDelimiter, q.reg.nome);
+                   querySuccess = true;
                }
            }
 
@@ -146,28 +153,18 @@ void executeTask(Task* task){
        case 3: // Select
            pthread_mutex_lock(&mutexBanco);
            fptr = fopen(dbfile, "r");
-           Registro reg; // poderia ser um array para permitir uma consulta maior?
+           // poderia ser um array de registros para permitir uma consulta maior?
 
            while(fgets(currentLine, DB_LINE_SIZE, fptr)){
                id = atoi(currentLine);
                if(id == q.reg.id){ // só buscando pelo id, ainda não tenho certeza como permitir buscar pelo nome também...
-                   reg.id = id;
-
-                   bool is_on_str = false;
-                   int str_position = 0;
-                   for(int i=0;i<DB_LINE_SIZE;i++){
-                       if(is_on_str){
-                           reg.nome[i-str_position] = currentLine[i];
-                       }
-                       else if(currentLine[i] == ','){
-                           is_on_str = true;
-                           str_position = i+1;
-                       }
-                   }
-               }
+                   // pega a primeira ocorrência do delimitar, incrementa por 1 para pegar apenas o nome
+                   strcpy(q.reg.nome, strchr(currentLine, dbDelimiter)+1);
+                    querySuccess = true;
+                }
            }
 
-           printf("id:%d - nome:%s\n", reg.id, reg.nome);
+           printf("id:%d - nome:%s\n", q.reg.id, q.reg.nome);
            fclose(fptr);
            pthread_mutex_unlock(&mutexBanco);
 
@@ -177,6 +174,23 @@ void executeTask(Task* task){
            printf("Comando inválido\n");
        break;
     }
+
+    char status[8];
+    if(querySuccess) strcpy(status, "Sucesso\0");
+    else strcpy(status, "Erro\0");
+
+    q.reg.nome[strcspn(q.reg.nome, "\n")] = 0;
+    // para evitar de, quando o nome vem do SELECT (nos outros casos ela já é tratada na função parseQuery), 
+    // o caractere '\n' vir junto e deixar o arquivo de log desorganizado
+
+    pthread_mutex_lock(&mutexLog);
+    fptr = fopen(logfile, "a");
+
+    fprintf(fptr, "%s ao executar operação %s em id=%d, nome=%s\n", status, q.commandString, q.reg.id, q.reg.nome);
+    if(q.command == 3) fprintf(fptr, "SELECT: id=%d, nome=%s\n", q.reg.id, q.reg.nome);
+
+    fclose(fptr);
+    pthread_mutex_unlock(&mutexLog);
 
     printf("Terminando thread %d\n", thread_id);
 }

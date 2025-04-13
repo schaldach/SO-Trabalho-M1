@@ -1,0 +1,12 @@
+Sucesso ao executar operação INSERT em id=9, nome=gama
+Sucesso ao executar operação UPDATE em id=9, nome=mana
+Sucesso ao executar operação DELETE em id=9, nome=
+Erro ao executar operação DELETE em id=9, nome=
+Erro ao executar operação DELETE em id=9, nome=
+Sucesso ao executar operação UPDATE em id=12, nome=man
+Erro ao executar operação UPDATE em id=13, nome=man
+Erro ao executar operação SELECT em id=12, nome=man
+Sucesso ao executar operação SELECT em id=12, nome=man
+SELECT: id=12, nome=man
+Erro ao executar operação SELECT em id=13, nome=
+SELECT: id=13, nome=

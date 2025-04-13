@@ -16,9 +16,11 @@
 #define QUERY_SIZE 100
 #define DB_LINE_SIZE 70
 
-char* dbfile = "banco.txt";
-char* tempfile = "bancotemp.txt";
-char* myfifo = "/tmp/myfifo";
+const char* dbfile = "banco.txt";
+const char* tempfile = "bancotemp.txt";
+const char* myfifo = "/tmp/myfifo";
+const char* logfile = "log.txt";
+const char dbDelimiter = ',';
 
 typedef struct {
     int id;
@@ -28,6 +30,7 @@ typedef struct {
 typedef struct {
     Registro reg;
     int command;
+    char commandString[7];
 } Query;
 
 typedef struct Task {
