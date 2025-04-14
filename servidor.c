@@ -24,18 +24,22 @@ Query parseQuery(char* query){
     query[strcspn(query, "\n")] = 0;
 
     int command = -1;  //váriável para identificar o comando a ser usado
-    
-    // pega os 6 primeiros caracteres da frase enviada
-    char queryCommand[7];
-    for(int y=0;y<6;y++) queryCommand[y] = query[y];
-    queryCommand[6] = '\0'; // senão vem caracteres estranhos no final, as vezes
-    // printf("%s\n", queryCommand);
+
+    //Pega o primeiro commando a ser usado
+    int lenCommand = strcspn(query," "); //pega o tamanho da substring que possui caracteres até o primeiro espaço
+    char queryCommand[9];
+
+    strncpy(queryCommand, query, lenCommand);
+    queryCommand[lenCommand] = '\0';
+
+    printf("%s\n", queryCommand);
 
     //verifica o tipo de comando
     if(strcmp(queryCommand, "DELETE") == 0) command = 0;
     if(strcmp(queryCommand, "INSERT") == 0) command = 1;
     if(strcmp(queryCommand, "UPDATE") == 0) command = 2;
     if(strcmp(queryCommand, "SELECT") == 0) command = 3;
+    if(strcmp(queryCommand, "TRUNCATE") == 0) command = 4;
 
     int id;
     //Procura o id na string e extrai o valor numérico
@@ -160,13 +164,13 @@ void executeTask(Task* task){
             rename(tempfile, dbfile); 
             pthread_mutex_unlock(&mutexBanco);
 
-       break;
+        break;
        
-       case 3: // Select
+        case 3: // Select
             pthread_mutex_lock(&mutexBanco);
             fptr = fopen(dbfile, "r");
             // poderia ser um array de registros para permitir uma consulta maior?
-           
+            
             //procura o id e imprime o nome
             while(fgets(currentLine, DB_LINE_SIZE, fptr)){
                 id = atoi(currentLine);
@@ -181,7 +185,17 @@ void executeTask(Task* task){
             fclose(fptr);
             pthread_mutex_unlock(&mutexBanco);
 
-       break;
+        break;
+        
+        case 4: // truncate
+            pthread_mutex_lock(&mutexBanco);
+            fptr = fopen(dbfile, "w");
+
+            fclose(fptr);
+            querySuccess = true;
+            pthread_mutex_unlock(&mutexBanco);
+
+        break;
 
        default: 
            printf("Comando inválido\n");

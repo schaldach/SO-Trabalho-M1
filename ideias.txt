@@ -1,0 +1,13 @@
+SERVIDOR:
+1.Dentro da função de query, ao invés de pegar os 6 primeiros caracteres, fazer um loop para pegar 
+todos os caracteres até que seja um ' '(espaço), com isso a array de caracteres queryCommand deve ser
+dinâmica - benefícios: abrir o leek de operações que podemos fazer (Fiz isso aqui pois estava com preguiça
+de ter que ficar limpando o banco.txt sempre na mão - implementei o TRUNCATE)
+
+2.Caso ocorra um erro de sintaxe ou um erro lógico, enviar o sinal para o cliente para assim mostrar no 
+terminal do cliente também (Opcional - só estética)
+
+Lógicas legais a se colocar:
+1. verificar se os comandos além das operações foram escritas, assim evitando o cliente fazer insert nome=3
+2. Na lógica de verificar os valores nome={valor}, fazer uma lógica para pegar o valor de dentro de "" para assim evitar 
+o problema do Insert id=3 nome= jonas (resultado: 3, )(resultado ideal: 3, jonas)
