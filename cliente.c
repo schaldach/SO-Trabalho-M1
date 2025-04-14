@@ -5,9 +5,25 @@
  * 	gcc shm-posix-producer.c -lrt
  */
 
- #include "banco.h"
- 
- int main(){
+#include "banco.h"
+
+char toUpper(char c){ // Caso o valor seja uma letra minuscula, será retornadoa em Uppercase
+   if (c >= 'a' && c <= 'z') {
+      return c - 32;
+   }
+   return c;
+}
+
+// Verifica se as seis primeiras letras são em Uppercase
+void checkIfIsUpper(char *command){ 
+   for(int i=0; i<6 && command[i] != '\0'; i++){
+      if(command[i] < 'A' || command[i] > 'Z'){
+         command[i] = toUpper(command[i]);
+      }
+   }
+}
+
+int main(){
    int fd1;
    char test_string[QUERY_SIZE];
    mkfifo(myfifo, 0666);
@@ -29,9 +45,12 @@
          break;
       }
       else{ // Executar a atividade
-         printf("\"%s\"\n", test_string);
+         checkIfIsUpper(test_string);
+
+         //printf("\"%s\"\n", test_string);
 
          fd1 = open(myfifo, O_WRONLY);
+
          write(fd1, test_string, strlen(test_string)+1);
          
          close(fd1);
@@ -41,4 +60,4 @@
    }
 
    return 0;
- }
+}
