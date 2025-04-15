@@ -19,29 +19,28 @@ pthread_mutex_t mutexQueue; //protege a fila lá
 pthread_cond_t condQueue;  // sinalizar que tem tarefas disponíveis
 
 Query parseQuery(char* query){
-    // (documentação no cliente)
     // o \n é inserido pelo banco nos comandos
     query[strcspn(query, "\n")] = 0;
 
-    int command = -1;  //váriável para identificar o comando a ser usado
+    Query q; 
+
+    q.command = -1;  //váriável para identificar o comando a ser usado
 
     //Pega o primeiro commando a ser usado
     int lenCommand = strcspn(query," "); //pega o tamanho da substring que possui caracteres até o primeiro espaço
-    char queryCommand[9];
 
-    strncpy(queryCommand, query, lenCommand);
-    queryCommand[lenCommand] = '\0';
+    strncpy(q.commandString, query, lenCommand);
+    q.commandString[lenCommand] = '\0';
 
-    printf("%s\n", queryCommand);
+    printf("%s\n", q.commandString);
 
     //verifica o tipo de comando
-    if(strcmp(queryCommand, "DELETE") == 0) command = 0;
-    if(strcmp(queryCommand, "INSERT") == 0) command = 1;
-    if(strcmp(queryCommand, "UPDATE") == 0) command = 2;
-    if(strcmp(queryCommand, "SELECT") == 0) command = 3;
-    if(strcmp(queryCommand, "TRUNCATE") == 0) command = 4;
+    if(strcmp(q.commandString, "DELETE") == 0) q.command = 0;
+    if(strcmp(q.commandString, "INSERT") == 0) q.command = 1;
+    if(strcmp(q.commandString, "UPDATE") == 0) q.command = 2;
+    if(strcmp(q.commandString, "SELECT") == 0) q.command = 3;
+    if(strcmp(q.commandString, "TRUNCATE") == 0) q.command = 4;
 
-    int id;
     //Procura o id na string e extrai o valor numérico
     char * idFound = strstr(query, "id=");
     if (idFound != NULL) {
@@ -51,29 +50,22 @@ Query parseQuery(char* query){
             if(query[y+idPosition] == ' ' || query[y+idPosition] == '\0') break;
             idString[y] = query[y+idPosition];
         }
-        id = atoi(idString); // se tiver espaços ele pega o número certinho
+        q.reg.id = atoi(idString); // se tiver espaços ele pega o número certinho
     }
 
-    char nameString[50] = "\0";
     //O mesmo processo só que para o nome
     char * nameFound = strstr(query, "nome=");
     if (nameFound != NULL) {
         int namePosition = nameFound - query + 5; 
         for(int y=0; y<50; y++){
             if(query[y+namePosition] == ' ' || query[y+namePosition] == '\0'){
-                nameString[y] = '\0';
+                q.reg.nome[y] = '\0';
                 break;
             }
-            nameString[y] = query[y+namePosition];
+            q.reg.nome[y] = query[y+namePosition];
         }    
     }
-    nameString[49] = '\0';
-
-    Query q; 
-    q.reg.id = id;
-    strcpy(q.reg.nome, nameString);
-    strcpy(q.commandString, queryCommand);
-    q.command = command;
+    q.reg.nome[49] = '\0';
 
     return q;
 }

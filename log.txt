@@ -14,3 +14,10 @@ Sucesso ao executar operação SELECT em id=9876, nome=abecedario
 SELECT: id=9876, nome=abecedario
 Sucesso ao executar operação SELECT em id=2, nome=piolho
 SELECT: id=2, nome=piolho
+Sucesso ao executar operação INSERT em id=992, nome=maj
+Sucesso ao executar operação TRUNCATE em id=0, nome=
+Sucesso ao executar operação INSERT em id=992, nome=maj
+Sucesso ao executar operação UPDATE em id=992, nome=nuj
+Sucesso ao executar operação SELECT em id=992, nome=nuj
+SELECT: id=992, nome=nuj
+Sucesso ao executar operação DELETE em id=992, nome=
