@@ -1,0 +1,16 @@
+Sucesso ao executar operação INSERT em id=2, nome=tatu
+Sucesso ao executar operação UPDATE em id=2, nome=piolho
+Sucesso ao executar operação INSERT em id=7, nome=mango
+Erro ao executar operação INSERT em id=7, nome=mango
+Sucesso ao executar operação INSERT em id=92, nome=guru
+Erro ao executar operação UPDATE em id=33, nome=das
+Erro ao executar, comando inválido
+Sucesso ao executar operação INSERT em id=9876, nome=abecedario
+Sucesso ao executar operação INSERT em id=5678901, nome=panenosistema
+Sucesso ao executar operação INSERT em id=999999, nome=gabrielmorgado
+Sucesso ao executar operação INSERT em id=55566622, nome=jonathanregis
+Sucesso ao executar operação INSERT em id=1221121, nome=felipemiguel
+Sucesso ao executar operação SELECT em id=9876, nome=abecedario
+SELECT: id=9876, nome=abecedario
+Sucesso ao executar operação SELECT em id=2, nome=piolho
+SELECT: id=2, nome=piolho
