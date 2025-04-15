@@ -30,7 +30,7 @@ typedef struct {
 typedef struct {
     Registro reg;
     int command;
-    char commandString[7];
+    char commandString[9];
 } Query;
 
 typedef struct Task {

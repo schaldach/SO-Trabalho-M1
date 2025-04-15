@@ -163,7 +163,6 @@ void executeTask(Task* task){
             remove(dbfile);
             rename(tempfile, dbfile); 
             pthread_mutex_unlock(&mutexBanco);
-
         break;
        
         case 3: // Select
