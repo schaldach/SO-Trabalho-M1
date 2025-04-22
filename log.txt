@@ -3,3 +3,4 @@ Sucesso ao executar operação INSERT em id=2, nome=ama
 Sucesso ao executar operação INSERT em id=3, nome=aca
 Sucesso ao executar operação INSERT em id=4, nome=aca
 Erro ao executar operação INSERT em id=4, nome=aca
+Sucesso ao executar operação INSERT em id=1, nome=looop

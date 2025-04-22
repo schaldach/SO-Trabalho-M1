@@ -1,4 +1,1 @@
-1,aba
-2,ama
-3,aca
-4,aca
+1,looop

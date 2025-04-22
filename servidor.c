@@ -215,6 +215,8 @@ void executeTask(Task* task){
     fclose(fptr);
     pthread_mutex_unlock(&mutexLog);
 
+    // sleep(60);
+
     printf("Terminando thread %d\n", thread_id);
 }
 
@@ -234,7 +236,9 @@ void* startThread(void* args) {
         pthread_mutex_lock(&mutexQueue);
         //Esse loop vai fazer com que a thread fique esperando até a próxima task for adicionada
         while (taskCount == 0) {
+            // printf("alo\n"); // para debug
             pthread_cond_wait(&condQueue, &mutexQueue);
+            // printf("aloooo\n");
         }
         
         //Quando for notado que possui uma nova tesk:
