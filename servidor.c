@@ -75,7 +75,7 @@ void executeTask(Task* task){
 
     //para verificar no log
     int thread_id = rand()%100000;
-    printf("Começando thread %d\n", thread_id);
+    printf("Começando requisição %d\n", thread_id);
 
     FILE *fptr;
     FILE *fptr2; 
@@ -217,7 +217,7 @@ void executeTask(Task* task){
 
     // sleep(60);
 
-    printf("Terminando thread %d\n", thread_id);
+    printf("Terminando requisição %d\n", thread_id);
 }
 
 void submitTask(Task task) {
