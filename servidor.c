@@ -288,7 +288,7 @@ int main(){
         submitTask(t);
 
         //sinaliza que é o fim da escrita da FIFO
-		close(fd);
+    	close(fd);
     }
       
     for (i = 0; i < THREAD_NUM; i++) {
